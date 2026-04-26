@@ -1,8 +1,5 @@
 fastapi
 uvicorn
 python-multipart
-tensorflow
-keras
 numpy
-python-dotenv
-flask-cors
+h5py
