@@ -3,27 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JAMV MODEL - ML Prediction</title>
+    <title>JAMV MODEL - Diabetic Retinopathy Detection</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #10b981;
-            --bg-dark: #0f172a;
-            --bg-card: #1e293b;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
+            --primary: #6366f1; --primary-dark: #4f46e5; --secondary: #10b981;
+            --warning: #f59e0b; --danger: #ef4444; --bg-dark: #0f172a;
+            --bg-card: #1e293b; --text-primary: #f8fafc; --text-secondary: #94a3b8;
             --border: #334155;
-            --error: #ef4444;
         }
-
         body {
             font-family: 'Inter', sans-serif;
             background: var(--bg-dark);
@@ -31,41 +20,30 @@
             min-height: 100vh;
             line-height: 1.6;
         }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
         header {
             text-align: center;
-            padding: 3rem 0;
-            background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+            padding: 2rem 0 3rem;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        header h1 {
-            font-size: 3rem;
-            font-weight: 700;
             margin-bottom: 0.5rem;
         }
-
-        header p {
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-        }
-
+        header .subtitle { color: var(--text-secondary); font-size: 1.1rem; }
         .status-bar {
             display: flex;
             justify-content: center;
-            gap: 2rem;
+            gap: 1.5rem;
             margin-bottom: 2rem;
             flex-wrap: wrap;
         }
-
         .status-item {
             display: flex;
             align-items: center;
@@ -74,8 +52,8 @@
             background: var(--bg-card);
             border-radius: 50px;
             border: 1px solid var(--border);
+            font-size: 0.875rem;
         }
-
         .status-dot {
             width: 10px;
             height: 10px;
@@ -83,107 +61,64 @@
             background: var(--secondary);
             animation: pulse 2s infinite;
         }
-
-        .status-dot.offline {
-            background: var(--error);
-            animation: none;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-
-        @media (max-width: 768px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-            header h1 {
-                font-size: 2rem;
-            }
-        }
-
+        .status-dot.offline { background: var(--danger); animation: none; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
         .card {
             background: var(--bg-card);
             border-radius: 16px;
             padding: 2rem;
             border: 1px solid var(--border);
         }
-
-        .card h2 {
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
+        .card-header {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
-
-        .card h2 .icon {
-            width: 32px;
-            height: 32px;
-            background: var(--primary);
-            border-radius: 8px;
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), #8b5cf6);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 1.5rem;
         }
-
-        .input-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 1rem;
+        .card h2 { font-size: 1.25rem; font-weight: 600; }
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
             background: var(--bg-dark);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 1rem;
-            font-family: 'Inter', sans-serif;
-            transition: border-color 0.3s, box-shadow 0.3s;
         }
-
-        .input-group input:focus {
-            outline: none;
+        .upload-area:hover {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            background: rgba(99, 102, 241, 0.05);
         }
-
-        .input-group textarea {
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        .upload-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .upload-area h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .upload-area p { color: var(--text-secondary); font-size: 0.875rem; }
+        .upload-area input { display: none; }
+        .preview-container { display: none; margin-top: 1.5rem; }
+        .preview-container.show { display: block; }
+        .image-preview {
             width: 100%;
-            padding: 1rem;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 12px;
             background: var(--bg-dark);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 1rem;
-            font-family: 'Inter', sans-serif;
-            resize: vertical;
-            min-height: 120px;
         }
-
-        .input-group textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-        }
-
+        .preview-actions { display: flex; gap: 1rem; margin-top: 1rem; }
         .btn {
             display: inline-flex;
             align-items: center;
@@ -198,26 +133,16 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-            width: 100%;
         }
-
         .btn:hover {
             background: var(--primary-dark);
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
         }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn.loading {
-            position: relative;
-            color: transparent;
-        }
-
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn.secondary { background: var(--bg-dark); border: 1px solid var(--border); }
+        .btn.secondary:hover { background: var(--border); }
+        .btn.loading { position: relative; color: transparent; }
         .btn.loading::after {
             content: '';
             position: absolute;
@@ -228,120 +153,111 @@
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .result-card {
-            display: none;
-        }
-
-        .result-card.show {
-            display: block;
-        }
-
-        .prediction-result {
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .result-container { display: none; }
+        .result-container.show { display: block; }
+        .result-header {
             text-align: center;
             padding: 2rem;
             background: var(--bg-dark);
             border-radius: 12px;
             margin-bottom: 1.5rem;
         }
-
-        .prediction-label {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-        }
-
-        .prediction-value {
-            font-size: 3rem;
-            font-weight: 700;
-            color: var(--secondary);
-        }
-
-        .confidence-bars {
-            margin-top: 1.5rem;
-        }
-
-        .confidence-item {
-            margin-bottom: 1rem;
-        }
-
+        .result-label { font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
+        .result-value { font-size: 2.5rem; font-weight: 700; }
+        .result-value.no-dr { color: var(--secondary); }
+        .result-value.mild { color: #22d3ee; }
+        .result-value.moderate { color: var(--warning); }
+        .result-value.severe { color: #f97316; }
+        .result-value.pdr { color: var(--danger); }
+        .confidence-section { margin-bottom: 1.5rem; }
+        .confidence-item { margin-bottom: 1rem; }
         .confidence-header {
             display: flex;
             justify-content: space-between;
             margin-bottom: 0.5rem;
             font-size: 0.875rem;
         }
-
-        .confidence-bar {
-            height: 8px;
+        .confidence-bar { height: 10px; background: var(--bg-dark); border-radius: 5px; overflow: hidden; }
+        .confidence-fill { height: 100%; border-radius: 5px; transition: width 0.5s ease; }
+        .confidence-fill.high { background: linear-gradient(90deg, var(--secondary), #34d399); }
+        .confidence-fill.medium { background: linear-gradient(90deg, var(--warning), #fbbf24); }
+        .confidence-fill.low { background: linear-gradient(90deg, var(--danger), #f87171); }
+        .recommendation {
             background: var(--bg-dark);
-            border-radius: 4px;
-            overflow: hidden;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border-left: 4px solid var(--primary);
         }
-
-        .confidence-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary), #8b5cf6);
-            border-radius: 4px;
-            transition: width 0.5s ease;
-        }
-
-        .history-list {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .history-item {
-            padding: 1rem;
-            background: var(--bg-dark);
-            border-radius: 8px;
-            margin-bottom: 0.75rem;
-            border-left: 3px solid var(--primary);
-        }
-
-        .history-item .time {
-            font-size: 0.75rem;
+        .recommendation h4 {
+            font-size: 0.875rem;
             color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-
-        .history-item .result {
-            font-weight: 600;
-            margin-top: 0.25rem;
+        .recommendation p { font-size: 0.95rem; line-height: 1.7; }
+        .reports-section { margin-top: 2rem; }
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
         }
-
+        .report-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            transition: transform 0.3s;
+        }
+        .report-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .report-card img { width: 100%; border-radius: 8px; margin-bottom: 1rem; }
+        .report-card h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+        .report-card p { color: var(--text-secondary); font-size: 0.875rem; }
         .error-message {
             background: rgba(239, 68, 68, 0.1);
-            border: 1px solid var(--error);
-            color: var(--error);
+            border: 1px solid var(--danger);
+            color: var(--danger);
             padding: 1rem;
             border-radius: 8px;
             margin-top: 1rem;
             display: none;
         }
-
-        .error-message.show {
-            display: block;
-        }
-
+        .error-message.show { display: block; }
         footer {
             text-align: center;
             padding: 2rem;
             color: var(--text-secondary);
             font-size: 0.875rem;
+            margin-top: 3rem;
+            border-top: 1px solid var(--border);
         }
+        .severity-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+        .severity-badge.none { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .severity-badge.mild { background: rgba(34, 211, 238, 0.2); color: #22d3ee; }
+        .severity-badge.moderate { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .severity-badge.severe { background: rgba(249, 115, 22, 0.2); color: #f97316; }
+        .severity-badge.pdr { background: rgba(239, 68, 68, 0.2); color: #f87171; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🤖 JAMV MODEL</h1>
-            <p>Machine Learning Prediction API</p>
+            <h1>👁️ JAMV MODEL</h1>
+            <p class="subtitle">Diabetic Retinopathy Detection System</p>
+            <p style="color: var(--text-secondary); margin-top: 0.5rem;">AI-Powered Retinal Image Analysis for Early Detection</p>
         </header>
-
         <div class="status-bar">
             <div class="status-item">
                 <div class="status-dot" id="apiStatus"></div>
@@ -355,77 +271,103 @@
                 <span id="connectionStatus">Connecting...</span>
             </div>
         </div>
-
         <div class="main-grid">
             <div class="card">
-                <h2>
-                    <span class="icon">📊</span>
-                    Input Features
-                </h2>
-                <div class="input-group">
-                    <label for="features">Enter Features (comma-separated)</label>
-                    <textarea id="features" placeholder="e.g., 1.2, 3.4, 5.6, 2.1, 0.8, 4.5, 3.2, 1.9"></textarea>
+                <div class="card-header">
+                    <div class="card-icon">📤</div>
+                    <h2>Upload Retinal Image</h2>
                 </div>
-                <button class="btn" id="predictBtn" onclick="makePrediction()">
-                    🚀 Make Prediction
-                </button>
-                <div class="error-message" id="errorMessage"></div>
-            </div>
-
-            <div class="card result-card" id="resultCard">
-                <h2>
-                    <span class="icon">📈</span>
-                    Prediction Result
-                </h2>
-                <div class="prediction-result">
-                    <div class="prediction-label">Predicted Class</div>
-                    <div class="prediction-value" id="predictedClass">-</div>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">🖼️</div>
+                    <h3>Drop your retinal image here</h3>
+                    <p>or click to browse</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.75rem;">Supported: JPG, PNG, JPEG (Max 10MB)</p>
+                    <input type="file" id="fileInput" accept="image/*">
                 </div>
-                <div class="confidence-bars">
-                    <div class="confidence-item">
-                        <div class="confidence-header">
-                            <span>Confidence</span>
-                            <span id="confidencePercent">0%</span>
-                        </div>
-                        <div class="confidence-bar">
-                            <div class="confidence-fill" id="confidenceFill" style="width: 0%"></div>
-                        </div>
+                <div class="preview-container" id="previewContainer">
+                    <img id="imagePreview" class="image-preview" alt="Preview">
+                    <div class="preview-actions">
+                        <button class="btn" id="predictBtn" onclick="makePrediction()">🔍 Analyze Image</button>
+                        <button class="btn secondary" onclick="clearImage()">✕ Clear</button>
                     </div>
                 </div>
+                <div class="error-message" id="errorMessage"></div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📊</div>
+                    <h2>Prediction Results</h2>
+                </div>
+                <div class="result-container" id="resultContainer">
+                    <div class="result-header">
+                        <div class="result-label">DETECTED CONDITION</div>
+                        <div class="result-value" id="predictedClass">-</div>
+                        <div class="severity-badge" id="severityBadge">-</div>
+                    </div>
+                    <div class="confidence-section">
+                        <h4 style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem;">CONFIDENCE SCORES</h4>
+                        <div id="confidenceBars"></div>
+                    </div>
+                    <div class="recommendation">
+                        <h4>💊 RECOMMENDATION</h4>
+                        <p id="recommendationText">Upload an image to get prediction</p>
+                    </div>
+                </div>
+                <div id="noResult" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <p style="font-size: 3rem; margin-bottom: 1rem;">🔬</p>
+                    <p>Upload a retinal image to see prediction results</p>
+                </div>
             </div>
         </div>
-
-        <div class="card" style="margin-top: 2rem;">
-            <h2>
-                <span class="icon">📜</span>
-                Prediction History
-            </h2>
-            <div class="history-list" id="historyList">
-                <p style="color: var(--text-secondary); text-align: center;">No predictions yet</p>
+        <div class="card reports-section">
+            <div class="card-header">
+                <div class="card-icon">📈</div>
+                <h2>Model Reports & Analysis</h2>
+            </div>
+            <div class="reports-grid">
+                <div class="report-card">
+                    <img src="../MODEL ACCURACY AND LOSS.png" alt="Model Accuracy and Loss" onerror="this.style.display='none'">
+                    <h3>📉 Model Accuracy & Loss</h3>
+                    <p>Training and validation accuracy over epochs</p>
+                </div>
+                <div class="report-card">
+                    <img src="../CONFUSION MATRIX.png" alt="Confusion Matrix" onerror="this.style.display='none'">
+                    <h3>🔢 Confusion Matrix</h3>
+                    <p>Model performance across all classes</p>
+                </div>
+                <div class="report-card">
+                    <img src="../CLASSIFICATION REPORT.png" alt="Classification Report" onerror="this.style.display='none'">
+                    <h3>📋 Classification Report</h3>
+                    <p>Precision, Recall, F1-Score for each class</p>
+                </div>
+                <div class="report-card">
+                    <img src="../DATA CLASS DISTRIBUTION.png" alt="Data Class Distribution" onerror="this.style.display='none'">
+                    <h3>📊 Class Distribution</h3>
+                    <p>Training data distribution across classes</p>
+                </div>
+                <div class="report-card">
+                    <img src="../REPORT IMAGE.png" alt="Final Report" onerror="this.style.display='none'">
+                    <h3>📑 Final Report</h3>
+                    <p>Complete model evaluation summary</p>
+                </div>
             </div>
         </div>
-
         <footer>
-            <p>JAMV MODEL © 2026 | Built with FastAPI + TensorFlow</p>
+            <p>🤖 JAMV MODEL © 2026 | Diabetic Retinopathy Detection System</p>
+            <p style="margin-top: 0.5rem; font-size: 0.75rem;">Powered by TensorFlow + FastAPI</p>
         </footer>
     </div>
-
     <script>
         const API_URL = 'http://localhost:8000';
-        let history = [];
-
-        // Check API status on load
+        let selectedFile = null;
         async function checkStatus() {
             try {
                 const response = await fetch(`${API_URL}/health`);
                 const data = await response.json();
-                
                 document.getElementById('apiStatus').classList.remove('offline');
-                document.getElementById('modelStatus').classList.remove('offline');
                 document.getElementById('modelStatus').classList.toggle('offline', !data.model_loaded);
                 document.getElementById('connectionStatus').textContent = 'Connected';
-                
-                return data.model_loaded;
+                return true;
             } catch (error) {
                 document.getElementById('apiStatus').classList.add('offline');
                 document.getElementById('modelStatus').classList.add('offline');
@@ -433,116 +375,86 @@
                 return false;
             }
         }
-
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+        uploadArea.addEventListener('dragleave', () => { uploadArea.classList.remove('dragover'); });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) { handleFile(e.dataTransfer.files[0]); }
+        });
+        fileInput.addEventListener('change', (e) => { if (e.target.files.length > 0) { handleFile(e.target.files[0]); } });
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) { showError('Please select an image file'); return; }
+            if (file.size > 10 * 1024 * 1024) { showError('File size must be less than 10MB'); return; }
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('previewContainer').classList.add('show');
+                uploadArea.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+        function clearImage() {
+            selectedFile = null;
+            fileInput.value = '';
+            document.getElementById('previewContainer').classList.remove('show');
+            document.getElementById('uploadArea').style.display = 'block';
+            document.getElementById('resultContainer').classList.remove('show');
+            document.getElementById('noResult').style.display = 'block';
+        }
         async function makePrediction() {
-            const featuresInput = document.getElementById('features').value.trim();
+            if (!selectedFile) { showError('Please select an image first'); return; }
             const predictBtn = document.getElementById('predictBtn');
             const errorMessage = document.getElementById('errorMessage');
-            
-            // Clear previous errors
             errorMessage.classList.remove('show');
-            
-            if (!featuresInput) {
-                showError('Please enter features');
-                return;
-            }
-
-            // Parse features
-            let features;
-            try {
-                features = featuresInput.split(',').map(f => parseFloat(f.trim()));
-                if (features.some(isNaN)) {
-                    throw new Error('Invalid number');
-                }
-            } catch (e) {
-                showError('Please enter valid comma-separated numbers');
-                return;
-            }
-
-            // Show loading state
             predictBtn.classList.add('loading');
             predictBtn.disabled = true;
-
             try {
-                const response = await fetch(`${API_URL}/predict`, {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                const response = await fetch(`${API_URL}/predict/image`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ features: features }),
+                    body: formData
                 });
-
-                if (!response.ok) {
-                    throw new Error(`API Error: ${response.statusText}`);
-                }
-
+                if (!response.ok) { throw new Error(`API Error: ${response.statusText}`); }
                 const data = await response.json();
                 displayResult(data);
-                addToHistory(features, data);
-                
-            } catch (error) {
-                showError(`Prediction failed: ${error.message}`);
-            } finally {
-                predictBtn.classList.remove('loading');
-                predictBtn.disabled = false;
-            }
+            } catch (error) { showError(`Prediction failed: ${error.message}`); }
+            finally { predictBtn.classList.remove('loading'); predictBtn.disabled = false; }
         }
-
         function displayResult(data) {
-            const resultCard = document.getElementById('resultCard');
+            const resultContainer = document.getElementById('resultContainer');
+            const noResult = document.getElementById('noResult');
+            resultContainer.classList.add('show');
+            noResult.style.display = 'none';
             const predictedClass = document.getElementById('predictedClass');
-            const confidencePercent = document.getElementById('confidencePercent');
-            const confidenceFill = document.getElementById('confidenceFill');
-
-            resultCard.classList.add('show');
-            predictedClass.textContent = data.predicted_class;
-            
-            // Calculate max confidence
-            const maxConfidence = Math.max(...data.confidence);
-            const percent = (maxConfidence * 100).toFixed(1);
-            
-            confidencePercent.textContent = `${percent}%`;
-            confidenceFill.style.width = `${percent}%`;
+            predictedClass.textContent = data.class_name;
+            const severity = data.severity.toLowerCase();
+            predictedClass.className = `result-value ${severity}`;
+            const severityBadge = document.getElementById('severityBadge');
+            severityBadge.textContent = data.severity + ' SEVERITY';
+            severityBadge.className = `severity-badge ${severity}`;
+            const confidenceBars = document.getElementById('confidenceBars');
+            const probs = data.all_probabilities;
+            const entries = Object.entries(probs).sort((a, b) => b[1] - a[1]);
+            confidenceBars.innerHTML = entries.map(([name, prob]) => {
+                const percent = (prob * 100).toFixed(1);
+                let fillClass = 'low';
+                if (prob > 0.5) fillClass = 'high';
+                else if (prob > 0.2) fillClass = 'medium';
+                return `<div class="confidence-item"><div class="confidence-header"><span>${name}</span><span>${percent}%</span></div><div class="confidence-bar"><div class="confidence-fill ${fillClass}" style="width: ${percent}%"></div></div></div>`;
+            }).join('');
+            document.getElementById('recommendationText').textContent = data.recommendation;
         }
-
-        function addToHistory(features, result) {
-            const historyItem = {
-                time: new Date().toLocaleTimeString(),
-                features: features.join(', '),
-                result: result.predicted_class,
-                confidence: Math.max(...result.confidence) * 100
-            };
-            
-            history.unshift(historyItem);
-            if (history.length > 10) history.pop();
-            
-            renderHistory();
-        }
-
-        function renderHistory() {
-            const historyList = document.getElementById('historyList');
-            
-            if (history.length === 0) {
-                historyList.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No predictions yet</p>';
-                return;
-            }
-
-            historyList.innerHTML = history.map(item => `
-                <div class="history-item">
-                    <div class="time">${item.time}</div>
-                    <div>Input: [${item.features}]</div>
-                    <div class="result">Class: ${item.result} (${item.confidence.toFixed(1)}%)</div>
-                </div>
-            `).join('');
-        }
-
         function showError(message) {
             const errorMessage = document.getElementById('errorMessage');
             errorMessage.textContent = message;
             errorMessage.classList.add('show');
         }
-
-        // Initialize
         checkStatus();
         setInterval(checkStatus, 30000);
     </script>
