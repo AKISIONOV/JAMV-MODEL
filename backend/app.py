@@ -7,6 +7,7 @@ import logging
 from PIL import Image
 import io
 import base64
+from database import init_db, save_prediction, get_prediction_history
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="JAMV MODEL - Diabetic Retinopathy API",
-    description="ML Model for Diabetic Retinopathy Detection from retinal images"
+    description="ML Model for Diabetic Retinopathy Detection using TFLite and SQLite"
 )
 
 # Configure CORS
@@ -26,22 +27,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load model
-model = None
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "best_model.keras")
+# Initialize database
+init_db()
 
-# Try to load model with keras
+# Load TFLite model
+interpreter = None
+input_details = None
+output_details = None
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "best_model.tflite")
+
 try:
-    from tensorflow import keras
-    logger.info(f"Loading model from: {MODEL_PATH}")
-    model = keras.models.load_model(MODEL_PATH)
-    logger.info("Model loaded successfully!")
-except ImportError:
-    logger.warning("TensorFlow not available, using mock model")
-    model = None
+    import tensorflow as tf
+    logger.info(f"Loading TFLite model from: {MODEL_PATH}")
+    interpreter = tf.lite.Interpreter(model_path=MODEL_PATH)
+    interpreter.allocate_tensors()
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+    logger.info("TFLite Model loaded successfully!")
 except Exception as e:
-    logger.error(f"Error loading model: {e}")
-    model = None
+    logger.error(f"Error loading TFLite model: {e}")
+    interpreter = None
 
 # DR Severity classes
 DR_CLASSES = [
@@ -59,6 +64,7 @@ class ImagePredictionResponse(BaseModel):
     all_probabilities: dict
     severity: str
     recommendation: str
+    id: int = None
 
 def preprocess_image(image_bytes, target_size=(224, 224)):
     """Preprocess image for model prediction"""
@@ -69,6 +75,7 @@ def preprocess_image(image_bytes, target_size=(224, 224)):
         img = img.resize(target_size)
         img_array = np.array(img, dtype=np.float32)
         img_array = img_array / 255.0
+        # Expand dims for batch size 1
         img_array = np.expand_dims(img_array, axis=0)
         return img_array
     except Exception as e:
@@ -91,11 +98,12 @@ async def root():
     return {
         "message": "JAMV MODEL - Diabetic Retinopathy Detection API",
         "status": "running",
-        "model_loaded": model is not None,
+        "model_loaded": interpreter is not None,
         "endpoints": {
             "health": "/health",
             "predict_image": "/predict/image",
-            "classes": DR_CLASSES
+            "history": "/predictions",
+            "classes": "/classes"
         }
     }
 
@@ -103,7 +111,7 @@ async def root():
 async def health_check():
     return {
         "status": "healthy",
-        "model_loaded": model is not None,
+        "model_loaded": interpreter is not None,
         "model_path": MODEL_PATH,
         "supported_classes": DR_CLASSES
     }
@@ -112,10 +120,16 @@ async def health_check():
 async def get_classes():
     return {"classes": DR_CLASSES, "description": "Diabetic Retinopathy severity classification"}
 
+@app.get("/predictions")
+async def get_history(limit: int = 50):
+    """Get prediction history from database"""
+    history = get_prediction_history(limit)
+    return {"history": history}
+
 @app.post("/predict/image", response_model=ImagePredictionResponse)
 async def predict_image(file: UploadFile = File(...)):
     """Predict diabetic retinopathy from retinal image"""
-    if model is None:
+    if interpreter is None:
         logger.warning("Using mock prediction - model not loaded")
         mock_probs = np.random.rand(5)
         mock_probs = mock_probs / mock_probs.sum()
@@ -126,7 +140,12 @@ async def predict_image(file: UploadFile = File(...)):
         try:
             image_bytes = await file.read()
             img_array = preprocess_image(image_bytes)
-            predictions = model.predict(img_array)[0]
+            
+            # Predict with TFLite
+            interpreter.set_tensor(input_details[0]['index'], img_array)
+            interpreter.invoke()
+            predictions = interpreter.get_tensor(output_details[0]['index'])[0]
+            
             predicted_class = int(np.argmax(predictions))
             confidence = float(predictions[predicted_class])
             all_probs = {DR_CLASSES[i]: float(predictions[i]) for i in range(len(predictions))}
@@ -136,55 +155,16 @@ async def predict_image(file: UploadFile = File(...)):
     
     severity_info = get_severity_info(predicted_class)
     
-    return ImagePredictionResponse(
+    # Save to database
+    prediction_id = save_prediction(
+        filename=file.filename,
         predicted_class=predicted_class,
         class_name=DR_CLASSES[predicted_class],
         confidence=confidence,
-        all_probabilities=all_probs,
+        all_probs=all_probs,
         severity=severity_info["severity"],
         recommendation=severity_info["recommendation"]
     )
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
-@app.get("/health")
-async def health_check():
-    return {
-        "status": "healthy",
-        "model_loaded": model is not None,
-        "model_path": MODEL_PATH,
-        "supported_classes": DR_CLASSES
-    }
-
-@app.get("/classes")
-async def get_classes():
-    return {"classes": DR_CLASSES, "description": "Diabetic Retinopathy severity classification"}
-
-@app.post("/predict/image", response_model=ImagePredictionResponse)
-async def predict_image(file: UploadFile = File(...)):
-    """Predict diabetic retinopathy from retinal image"""
-    if model is None:
-        logger.warning("Using mock prediction - model not loaded")
-        mock_probs = np.random.rand(5)
-        mock_probs = mock_probs / mock_probs.sum()
-        predicted_class = int(np.argmax(mock_probs))
-        confidence = float(mock_probs[predicted_class])
-        all_probs = {DR_CLASSES[i]: float(mock_probs[i]) for i in range(5)}
-    else:
-        try:
-            image_bytes = await file.read()
-            img_array = preprocess_image(image_bytes)
-            predictions = model.predict(img_array)[0]
-            predicted_class = int(np.argmax(predictions))
-            confidence = float(predictions[predicted_class])
-            all_probs = {DR_CLASSES[i]: float(predictions[i]) for i in range(len(predictions))}
-        except Exception as e:
-            logger.error(f"Prediction error: {e}")
-            raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
-    
-    severity_info = get_severity_info(predicted_class)
     
     return ImagePredictionResponse(
         predicted_class=predicted_class,
@@ -192,11 +172,10 @@ async def predict_image(file: UploadFile = File(...)):
         confidence=confidence,
         all_probabilities=all_probs,
         severity=severity_info["severity"],
-        recommendation=severity_info["recommendation"]
+        recommendation=severity_info["recommendation"],
+        id=prediction_id
     )
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

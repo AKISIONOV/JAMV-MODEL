@@ -29,7 +29,9 @@ wheels/
 
 # Virtual Environment
 .venv/
+.venv313/
 venv/
+predictions.db
 ENV/
 env/
 
