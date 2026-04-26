@@ -66,7 +66,7 @@ class ImagePredictionResponse(BaseModel):
     recommendation: str
     id: int = None
 
-def preprocess_image(image_bytes, target_size=(224, 224)):
+def preprocess_image(image_bytes, target_size=(100, 100)):
     """Preprocess image for model prediction"""
     try:
         img = Image.open(io.BytesIO(image_bytes))

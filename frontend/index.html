@@ -71,6 +71,37 @@
                 </table>
             </div>
         </section>
+
+        <!-- Reports Card -->
+        <section class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0;">Model Performance Reports</h2>
+                <button class="btn btn-primary" onclick="toggleReports()" id="toggleReportsBtn">View Reports</button>
+            </div>
+            
+            <div class="reports-grid" id="reportsGrid" style="display: none;">
+                <div class="report-item">
+                    <h4>Accuracy & Loss</h4>
+                    <img src="reports/MODEL ACCURACY AND LOSS.png" alt="Accuracy and Loss Chart" class="report-img">
+                </div>
+                <div class="report-item">
+                    <h4>Confusion Matrix</h4>
+                    <img src="reports/CONFUSION MATRIX.png" alt="Confusion Matrix" class="report-img">
+                </div>
+                <div class="report-item">
+                    <h4>Classification Report</h4>
+                    <img src="reports/CLASSIFICATION REPORT.png" alt="Classification Report" class="report-img">
+                </div>
+                <div class="report-item">
+                    <h4>Data Class Distribution</h4>
+                    <img src="reports/DATA CLASS DISTRIBUTION.png" alt="Data Class Distribution" class="report-img">
+                </div>
+                <div class="report-item" style="grid-column: 1 / -1;">
+                    <h4>General Report Summary</h4>
+                    <img src="reports/REPORT IMAGE.png" alt="Summary Report" class="report-img" style="max-height: none;">
+                </div>
+            </div>
+        </section>
     </div>
 
     <footer>
@@ -192,6 +223,18 @@
 
         // Load history on page load
         window.onload = loadHistory;
+
+        function toggleReports() {
+            const grid = document.getElementById('reportsGrid');
+            const btn = document.getElementById('toggleReportsBtn');
+            if (grid.style.display === 'none') {
+                grid.style.display = 'grid';
+                btn.textContent = 'Hide Reports';
+            } else {
+                grid.style.display = 'none';
+                btn.textContent = 'View Reports';
+            }
+        }
     </script>
 </body>
 </html>
